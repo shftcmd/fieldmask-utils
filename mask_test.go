@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/genproto/protobuf/field_mask"
 
-	"github.com/mennanov/fieldmask-utils"
+	"github.com/shftcmd/fieldmask-utils"
 )
 
 func TestMask_String(t *testing.T) {
