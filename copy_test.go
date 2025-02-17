@@ -1013,7 +1013,10 @@ func TestStructToStruct_SameInterfacesNonPtr_NonEmptyDst(t *testing.T) {
 
 	mask := fieldmask_utils.MaskFromString("Stringer")
 	err := fieldmask_utils.StructToStruct(mask, src, dst)
-	assert.Error(t, err)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Jessica", src.Stringer.String())
+	assert.Equal(t, "Adam", dst.Stringer.String())
 }
 
 func TestStructToStruct_NonPtrDst(t *testing.T) {
