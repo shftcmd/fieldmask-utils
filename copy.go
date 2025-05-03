@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
@@ -249,7 +250,14 @@ func structToStruct(filter FieldFilter, src, dst *reflect.Value, userOptions *op
 				return errors.WithStack(err)
 			}
 		}
-
+	case reflect.Int32:
+		srcEnum, srcOk := src.Interface().(protoEnumValuer)
+		dstEnum, dstOk := dst.Interface().(protoEnumValuer)
+		if srcOk && dstOk {
+			dst.SetInt(int64(enumNumberFromString(dstEnum, srcEnum.String())))
+			return nil
+		}
+		fallthrough
 	default:
 		if !dst.CanSet() {
 			return errors.Errorf("dst %s, %s is not settable", dst, dst.Type())
@@ -265,6 +273,21 @@ func structToStruct(filter FieldFilter, src, dst *reflect.Value, userOptions *op
 	}
 
 	return nil
+}
+
+type protoEnumValuer interface {
+	String() string
+	Descriptor() protoreflect.EnumDescriptor
+	Number() protoreflect.EnumNumber
+}
+
+func enumNumberFromString(e protoEnumValuer, name string) int32 {
+	enumDescriptor := e.Descriptor()
+	valueDescriptor := enumDescriptor.Values().ByName(protoreflect.Name(name))
+	if valueDescriptor == nil {
+		return 0
+	}
+	return int32(valueDescriptor.Number())
 }
 
 // options are used in StructToStruct and StructToMap functions to modify the copying behavior.
